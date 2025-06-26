@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shared Calendar Highlight</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 60px);
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        .date {
+            width: 60px;
+            height: 60px;
+            background-color: #eee;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+        }
+        .highlighted {
+            background-color: red;
+            color: white;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #555;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<h2>Click a date to highlight it</h2>
+<div class="calendar" id="calendar"></div>
+<button onclick="resetHighlights()">Reset Highlights</button>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script>
+    const calendar = document.getElementById("calendar");
+
+    // Generate 30 days for the calendar
+    for (let i = 1; i <= 30; i++) {
+        const dateDiv = document.createElement("div");
+        dateDiv.classList.add("date");
+        dateDiv.textContent = i;
+        dateDiv.onclick = () => {
+            localStorage.setItem("highlightedDate", i);
+            highlightFromStorage();
+            confetti();
+        };
+        calendar.appendChild(dateDiv);
+    }
+
+    function highlightFromStorage() {
+        const highlighted = localStorage.getItem("highlightedDate");
+        const dates = document.querySelectorAll(".date");
+        dates.forEach((el) => {
+            el.classList.remove("highlighted");
+            if (el.textContent === highlighted) {
+                el.classList.add("highlighted");
+            }
+        });
+    }
+
+    function resetHighlights() {
+        localStorage.removeItem("highlightedDate");
+        highlightFromStorage();
+    }
+
+    // Initial load
+    highlightFromStorage();
+</script>
+</body>
+</html>
