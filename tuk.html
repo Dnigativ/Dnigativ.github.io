@@ -78,6 +78,7 @@
     measurementId: "G-920M0LQP8J"
   };
 
+  // Ініціалізація Firebase
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
@@ -91,12 +92,14 @@
       dateDiv.classList.add("date");
       dateDiv.textContent = i;
       dateDiv.onclick = () => {
+        console.log("Clicked date:", i);
         userDoc.set({ selectedDate: i })
           .then(() => {
+            console.log("Date saved to Firestore:", i);
             highlightDate(i);
             confetti();
           })
-          .catch(console.error);
+          .catch(error => console.error("Error writing date:", error));
       };
       calendar.appendChild(dateDiv);
     }
@@ -104,6 +107,7 @@
 
   // Підсвічуємо вибрану дату
   function highlightDate(date) {
+    console.log("Highlighting date:", date);
     const dates = document.querySelectorAll(".date");
     dates.forEach(el => {
       el.classList.toggle("highlighted", el.textContent === String(date));
@@ -112,11 +116,13 @@
 
   // Скидання вибору (з Firebase)
   function resetHighlights() {
+    console.log("Reset button clicked");
     userDoc.delete()
       .then(() => {
+        console.log("Date deleted from Firestore");
         highlightDate(null);
       })
-      .catch(console.error);
+      .catch(error => console.error("Error deleting date:", error));
   }
 
   document.getElementById("resetBtn").onclick = resetHighlights;
@@ -128,8 +134,10 @@
   userDoc.onSnapshot(doc => {
     if (doc.exists) {
       const data = doc.data();
+      console.log("Received update from Firestore:", data);
       highlightDate(data.selectedDate);
     } else {
+      console.log("No document found");
       highlightDate(null);
     }
   });
