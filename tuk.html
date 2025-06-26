@@ -1,78 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shared Calendar Highlight</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem;
-        }
-
-<script>
-  // Конфігурація Firebase (заміни на свою!)
-  const firebaseConfig = {
-  apiKey: "AIzaSyBAyfOk2KhZMqFssxIgwN2WZcUUX44qp7U",
-  authDomain: "tiku-910b2.firebaseapp.com",
-  projectId: "tiku-910b2",
-  storageBucket: "tiku-910b2.firebasestorage.app",
-  messagingSenderId: "880825243710",
-  appId: "1:880825243710:web:7dbdceaf68d11756add96f",
-  measurementId: "G-920M0LQP8J"
-  };
-
-  // Ініціалізація Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
-  const calendar = document.getElementById("calendar");
-  const userDoc = db.collection("userSelections").doc("sharedUser"); // Загальний користувач
-
-  // Функція для підсвічування дат
-  function highlightDate(date) {
-    const dates = document.querySelectorAll(".date");
-    dates.forEach(el => {
-      el.classList.toggle("highlighted", el.textContent === String(date));
-    });
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shared Calendar Highlight</title>
+<style>
+  body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
   }
-
-  // Завантаження вибраної дати з Firestore
-  userDoc.get().then(doc => {
-    if (doc.exists) {
-      const data = doc.data();
-      if (data.selectedDate) {
-        highlightDate(data.selectedDate);
-      }
-    }
-  }).catch(error => {
-    console.error("Помилка при завантаженні дати:", error);
-  });
-
-  // Генеруємо календар
-  for (let i = 1; i <= 30; i++) {
-    const dateDiv = document.createElement("div");
-    dateDiv.classList.add("date");
-    dateDiv.textContent = i;
-    dateDiv.onclick = () => {
-      // Записуємо дату у Firestore
-      userDoc.set({ selectedDate: i })
-        .then(() => {
-          highlightDate(i);
-          confetti();
-        })
-        .catch(error => {
-          console.error("Помилка при записі дати:", error);
-        });
-    };
-    calendar.appendChild(dateDiv);
+  .calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 60px);
+    gap: 10px;
+    margin-bottom: 1rem;
+    max-width: 100%;
+    overflow-x: auto;
   }
-</script>
-        
-        .date {
+  .date {
     width: 60px;
     height: 60px;
     background-color: #eee;
@@ -83,85 +31,108 @@
     border-radius: 6px;
     transition: background-color 0.3s;
     flex-shrink: 0;
-}
-
-/* Контейнер календаря: 7 колонок по 60px + відступи */
-.calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 60px);
-    gap: 10px;
-    margin-bottom: 1rem;
-    max-width: 100%;
-    overflow-x: auto; /* щоб можна було скролити, якщо екран дуже малий */
-}
-
-/* Мобільний адаптив */
-@media (max-width: 480px) {
+  }
+  .highlighted {
+    background-color: red;
+    color: white;
+  }
+  button {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    background-color: #555;
+    color: white;
+    cursor: pointer;
+  }
+  @media (max-width: 480px) {
     .calendar {
-        grid-template-columns: repeat(7, 1fr);
+      grid-template-columns: repeat(7, 1fr);
     }
     .date {
-        width: 100%;
-        max-width: none;
-        height: 50px; /* можна зменшити висоту, щоб виглядало компактніше */
+      width: 100%;
+      max-width: none;
+      height: 50px;
     }
-}
-
-        .highlighted {
-            background-color: red;
-            color: white;
-        }
-        button {
-            padding: 0.5rem 1rem;
-            font-size: 1rem;
-            border: none;
-            border-radius: 5px;
-            background-color: #555;
-            color: white;
-            cursor: pointer;
-        }
-    </style>
+  }
+</style>
 </head>
 <body>
 <h2>Click a date to highlight it</h2>
 <div class="calendar" id="calendar"></div>
-<button onclick="resetHighlights()">Reset Highlights</button>
+<button id="resetBtn">Reset Highlights</button>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <script>
-    const calendar = document.getElementById("calendar");
+  // Конфіг Firebase - заміни на свій
+  const firebaseConfig = {
+    apiKey: "AIzaSyBAyfOk2KhZMqFssxIgwN2WZcUUX44qp7U",
+    authDomain: "tiku-910b2.firebaseapp.com",
+    projectId: "tiku-910b2",
+    storageBucket: "tiku-910b2.firebasestorage.app",
+    messagingSenderId: "880825243710",
+    appId: "1:880825243710:web:7dbdceaf68d11756add96f",
+    measurementId: "G-920M0LQP8J"
+  };
 
-    // Generate 30 days for the calendar
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const calendar = document.getElementById("calendar");
+  const userDoc = db.collection("userSelections").doc("sharedUser");
+
+  // Створюємо календар
+  function createCalendar() {
     for (let i = 1; i <= 30; i++) {
-        const dateDiv = document.createElement("div");
-        dateDiv.classList.add("date");
-        dateDiv.textContent = i;
-        dateDiv.onclick = () => {
-            localStorage.setItem("highlightedDate", i);
-            highlightFromStorage();
+      const dateDiv = document.createElement("div");
+      dateDiv.classList.add("date");
+      dateDiv.textContent = i;
+      dateDiv.onclick = () => {
+        userDoc.set({ selectedDate: i })
+          .then(() => {
+            highlightDate(i);
             confetti();
-        };
-        calendar.appendChild(dateDiv);
+          })
+          .catch(console.error);
+      };
+      calendar.appendChild(dateDiv);
     }
+  }
 
-    function highlightFromStorage() {
-        const highlighted = localStorage.getItem("highlightedDate");
-        const dates = document.querySelectorAll(".date");
-        dates.forEach((el) => {
-            el.classList.remove("highlighted");
-            if (el.textContent === highlighted) {
-                el.classList.add("highlighted");
-            }
-        });
+  // Підсвічуємо вибрану дату
+  function highlightDate(date) {
+    const dates = document.querySelectorAll(".date");
+    dates.forEach(el => {
+      el.classList.toggle("highlighted", el.textContent === String(date));
+    });
+  }
+
+  // Скидання вибору (з Firebase)
+  function resetHighlights() {
+    userDoc.delete()
+      .then(() => {
+        highlightDate(null);
+      })
+      .catch(console.error);
+  }
+
+  document.getElementById("resetBtn").onclick = resetHighlights;
+
+  // Ініціалізація
+  createCalendar();
+
+  // Слухаємо зміни в базі (реальний час)
+  userDoc.onSnapshot(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      highlightDate(data.selectedDate);
+    } else {
+      highlightDate(null);
     }
-
-    function resetHighlights() {
-        localStorage.removeItem("highlightedDate");
-        highlightFromStorage();
-    }
-
-    // Initial load
-    highlightFromStorage();
+  });
 </script>
 </body>
 </html>
