@@ -30,10 +30,10 @@
     cursor: pointer;
     border-radius: 6px;
     transition: background-color 0.3s;
-    flex-shrink: 0;
+    user-select: none;
   }
   .highlighted {
-    background-color: red;
+    background-color: #e74c3c;
     color: white;
   }
   button {
@@ -45,59 +45,87 @@
     color: white;
     cursor: pointer;
   }
+  @media (max-width: 480px) {
+    .calendar {
+      grid-template-columns: repeat(7, 1fr);
+    }
+    .date {
+      width: 100%;
+      height: 50px;
+    }
+  }
 </style>
-  <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const SUPABASE_URL = "https://your-project.supabase.co";
-    const SUPABASE_ANON_KEY = "your-anon-key";
+</head>
+<body>
 
+<h2>Click a date to highlight it (shared via Supabase)</h2>
+<div id="calendar" class="calendar"></div>
+<button id="resetBtn">Reset Selection</button>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // Встав сюди свої дані Supabase
+    const SUPABASE_URL = "https://your-project.supabase.co";
+    const SUPABASE_ANON_KEY = "your-anon-public-key";
+
+    // Ініціалізуємо клієнт
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const calendar = document.getElementById("calendar");
-    const USER_ID = "sharedUser"; // спільний користувач
+    const USER_ID = "sharedUser"; // Використовуємо один id для всіх для синхронізації
 
+    // Створюємо календар з 30 днів
     function createCalendar() {
       for (let i = 1; i <= 30; i++) {
-        const dateDiv = document.createElement("div");
-        dateDiv.classList.add("date");
-        dateDiv.textContent = i;
-        dateDiv.onclick = () => selectDate(i);
-        calendar.appendChild(dateDiv);
+        const day = document.createElement("div");
+        day.classList.add("date");
+        day.textContent = i;
+        day.onclick = () => selectDate(i);
+        calendar.appendChild(day);
       }
     }
 
+    // Підсвічуємо вибрану дату
     function highlightDate(date) {
       const dates = document.querySelectorAll(".date");
-      dates.forEach(el => {
-        el.classList.toggle("highlighted", el.textContent === String(date));
+      dates.forEach(d => {
+        d.classList.toggle("highlighted", d.textContent === String(date));
       });
     }
 
+    // Вибираємо дату і записуємо у Supabase
     async function selectDate(date) {
       try {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from("user_selections")
           .upsert({ user_id: USER_ID, selected_date: date }, { onConflict: "user_id" });
+
         if (error) throw error;
+
         highlightDate(date);
       } catch (err) {
-        console.error("Error selecting date:", err);
+        console.error("Error selecting date:", err.message);
       }
     }
 
+    // Скидаємо вибір (видаляємо запис)
     async function resetSelection() {
       try {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from("user_selections")
           .delete()
           .eq("user_id", USER_ID);
+
         if (error) throw error;
+
         highlightDate(null);
       } catch (err) {
-        console.error("Error resetting selection:", err);
+        console.error("Error resetting selection:", err.message);
       }
     }
 
+    // Завантажуємо вибрану дату з Supabase при старті
     async function loadSelection() {
       try {
         const { data, error } = await supabase
@@ -105,13 +133,16 @@
           .select("selected_date")
           .eq("user_id", USER_ID)
           .single();
-        if (error && error.code !== 'PGRST116') throw error;
+
+        if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows found
+
         if (data) highlightDate(data.selected_date);
       } catch (err) {
-        console.error("Error loading selection:", err);
+        console.error("Error loading selection:", err.message);
       }
     }
 
+    // Підписуємось на зміни в таблиці (реальний час)
     function subscribeToChanges() {
       supabase
         .channel('public:user_selections')
@@ -133,110 +164,6 @@
 
     document.getElementById("resetBtn").onclick = resetSelection;
   });
-</script>
-
-</head>
-<body>
-
-<h2>Click a date to highlight it (Supabase sync)</h2>
-<div class="calendar" id="calendar"></div>
-<button id="resetBtn">Reset Highlights</button>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
-<script>
-  // Встав сюди свої дані з Supabase
-  const SUPABASE_URL = "https://your-project.supabase.co";
-  const SUPABASE_ANON_KEY = "your-anon-key";
-
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  const calendar = document.getElementById("calendar");
-  const USER_ID = "sharedUser"; // спільний користувач
-
-  // Створюємо календар
-  function createCalendar() {
-    for (let i = 1; i <= 30; i++) {
-      const dateDiv = document.createElement("div");
-      dateDiv.classList.add("date");
-      dateDiv.textContent = i;
-      dateDiv.onclick = () => selectDate(i);
-      calendar.appendChild(dateDiv);
-    }
-  }
-
-  // Підсвічуємо дату
-  function highlightDate(date) {
-    const dates = document.querySelectorAll(".date");
-    dates.forEach(el => {
-      el.classList.toggle("highlighted", el.textContent === String(date));
-    });
-  }
-
-  // Записуємо вибір дати у Supabase
-  async function selectDate(date) {
-    try {
-      const { data, error } = await supabase
-        .from("user_selections")
-        .upsert({ user_id: USER_ID, selected_date: date }, { onConflict: "user_id" });
-      if (error) throw error;
-      console.log("Date selected:", date);
-      highlightDate(date);
-    } catch (err) {
-      console.error("Error selecting date:", err);
-    }
-  }
-
-  // Скидаємо вибір дати
-  async function resetSelection() {
-    try {
-      const { data, error } = await supabase
-        .from("user_selections")
-        .delete()
-        .eq("user_id", USER_ID);
-      if (error) throw error;
-      highlightDate(null);
-      console.log("Selection reset");
-    } catch (err) {
-      console.error("Error resetting selection:", err);
-    }
-  }
-
-  // Отримуємо поточний вибір при завантаженні
-  async function loadSelection() {
-    try {
-      const { data, error } = await supabase
-        .from("user_selections")
-        .select("selected_date")
-        .eq("user_id", USER_ID)
-        .single();
-      if (error && error.code !== 'PGRST116') throw error; // PGRST116 - не знайдено запис, це нормально
-      if (data) highlightDate(data.selected_date);
-    } catch (err) {
-      console.error("Error loading selection:", err);
-    }
-  }
-
-  // Слухаємо реальні зміни з Supabase
-  function subscribeToChanges() {
-    supabase
-      .channel('public:user_selections')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'user_selections', filter: `user_id=eq.${USER_ID}` },
-        payload => {
-          console.log("Received update from Supabase:", payload.new);
-          highlightDate(payload.new ? payload.new.selected_date : null);
-        }
-      )
-      .subscribe();
-  }
-
-  // Ініціалізація
-  createCalendar();
-  loadSelection();
-  subscribeToChanges();
-
-  document.getElementById("resetBtn").onclick = resetSelection;
 </script>
 
 </body>
