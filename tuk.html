@@ -46,6 +46,95 @@
     cursor: pointer;
   }
 </style>
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const SUPABASE_URL = "https://your-project.supabase.co";
+    const SUPABASE_ANON_KEY = "your-anon-key";
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const calendar = document.getElementById("calendar");
+    const USER_ID = "sharedUser"; // спільний користувач
+
+    function createCalendar() {
+      for (let i = 1; i <= 30; i++) {
+        const dateDiv = document.createElement("div");
+        dateDiv.classList.add("date");
+        dateDiv.textContent = i;
+        dateDiv.onclick = () => selectDate(i);
+        calendar.appendChild(dateDiv);
+      }
+    }
+
+    function highlightDate(date) {
+      const dates = document.querySelectorAll(".date");
+      dates.forEach(el => {
+        el.classList.toggle("highlighted", el.textContent === String(date));
+      });
+    }
+
+    async function selectDate(date) {
+      try {
+        const { data, error } = await supabase
+          .from("user_selections")
+          .upsert({ user_id: USER_ID, selected_date: date }, { onConflict: "user_id" });
+        if (error) throw error;
+        highlightDate(date);
+      } catch (err) {
+        console.error("Error selecting date:", err);
+      }
+    }
+
+    async function resetSelection() {
+      try {
+        const { data, error } = await supabase
+          .from("user_selections")
+          .delete()
+          .eq("user_id", USER_ID);
+        if (error) throw error;
+        highlightDate(null);
+      } catch (err) {
+        console.error("Error resetting selection:", err);
+      }
+    }
+
+    async function loadSelection() {
+      try {
+        const { data, error } = await supabase
+          .from("user_selections")
+          .select("selected_date")
+          .eq("user_id", USER_ID)
+          .single();
+        if (error && error.code !== 'PGRST116') throw error;
+        if (data) highlightDate(data.selected_date);
+      } catch (err) {
+        console.error("Error loading selection:", err);
+      }
+    }
+
+    function subscribeToChanges() {
+      supabase
+        .channel('public:user_selections')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'user_selections', filter: `user_id=eq.${USER_ID}` },
+          payload => {
+            console.log("Received update from Supabase:", payload.new);
+            highlightDate(payload.new ? payload.new.selected_date : null);
+          }
+        )
+        .subscribe();
+    }
+
+    // Ініціалізація
+    createCalendar();
+    loadSelection();
+    subscribeToChanges();
+
+    document.getElementById("resetBtn").onclick = resetSelection;
+  });
+</script>
+
 </head>
 <body>
 
