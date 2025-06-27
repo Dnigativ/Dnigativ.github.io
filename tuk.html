@@ -62,12 +62,12 @@
 <div class="calendar" id="calendar"></div>
 <button id="resetBtn">Reset Highlights</button>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import confetti from "https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js";
 
-<script>
-  // Конфіг Firebase - заміни на свій
+  // Firebase конфігурація (твоя)
   const firebaseConfig = {
     apiKey: "AIzaSyBAyfOk2KhZMqFssxIgwN2WZcUUX44qp7U",
     authDomain: "tiku-910b2.firebaseapp.com",
@@ -79,68 +79,69 @@
   };
 
   // Ініціалізація Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const userDoc = doc(db, "userSelections", "sharedUser");
 
   const calendar = document.getElementById("calendar");
-  const userDoc = db.collection("userSelections").doc("sharedUser");
+  const resetBtn = document.getElementById("resetBtn");
 
-  // Створюємо календар
+  // Функція створення календаря
   function createCalendar() {
-    for (let i = 1; i <= 30; i++) {
+    for(let i = 1; i <= 30; i++) {
       const dateDiv = document.createElement("div");
       dateDiv.classList.add("date");
       dateDiv.textContent = i;
       dateDiv.onclick = () => {
-        console.log("Clicked date:", i);
-        userDoc.set({ selectedDate: i })
-          .then(() => {
-            console.log("Date saved to Firestore:", i);
-            highlightDate(i);
-            confetti();
-          })
-          .catch(error => console.error("Error writing date:", error));
+        setDoc(userDoc, { selectedDate: i }).then(() => {
+          highlightDate(i);
+          confetti();
+          console.log("Clicked date:", i);
+        }).catch(console.error);
       };
       calendar.appendChild(dateDiv);
     }
   }
 
-  // Підсвічуємо вибрану дату
+  // Підсвічування вибраної дати
   function highlightDate(date) {
-    console.log("Highlighting date:", date);
     const dates = document.querySelectorAll(".date");
     dates.forEach(el => {
       el.classList.toggle("highlighted", el.textContent === String(date));
     });
+    console.log("Highlighting date:", date);
   }
 
-  // Скидання вибору (з Firebase)
+  // Скидання вибору
   function resetHighlights() {
-    console.log("Reset button clicked");
-    userDoc.delete()
-      .then(() => {
-        console.log("Date deleted from Firestore");
-        highlightDate(null);
-      })
-      .catch(error => console.error("Error deleting date:", error));
+    deleteDoc(userDoc).then(() => {
+      highlightDate(null);
+      console.log("Reset highlights");
+    }).catch(console.error);
   }
 
-  document.getElementById("resetBtn").onclick = resetHighlights;
+  resetBtn.onclick = resetHighlights;
 
-  // Ініціалізація
-  createCalendar();
-
-  // Слухаємо зміни в базі (реальний час)
-  userDoc.onSnapshot(doc => {
-    if (doc.exists) {
-      const data = doc.data();
-      console.log("Received update from Firestore:", data);
-      highlightDate(data.selectedDate);
-    } else {
-      console.log("No document found");
-      highlightDate(null);
+  // Поллінг: опитування Firestore кожні 5 секунд
+  async function pollFirestore() {
+    try {
+      const docSnap = await getDoc(userDoc);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        highlightDate(data.selectedDate);
+      } else {
+        highlightDate(null);
+      }
+    } catch (err) {
+      console.error("Помилка при отриманні документа:", err);
     }
-  });
+  }
+
+  createCalendar();
+  pollFirestore(); // стартове завантаження
+  setInterval(pollFirestore, 5000); // оновлення кожні 5 секунд
+
 </script>
+
 </body>
 </html>
