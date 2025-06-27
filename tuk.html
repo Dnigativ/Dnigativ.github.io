@@ -63,14 +63,16 @@
   const USER_ID = "sharedUser";
 
   // Створюємо 30 дат
-  function createCalendar() {
-    calendar.innerHTML = ""; // очищуємо
     for (let i = 1; i <= 30; i++) {
-      const day = document.createElement("div");
-      day.classList.add("date");
-      day.textContent = i;
-      day.addEventListener("click", () => selectDate(i));
-      calendar.appendChild(day);
+        const dateDiv = document.createElement("div");
+        dateDiv.classList.add("date");
+        dateDiv.textContent = i;
+        dateDiv.onclick = () => {
+            localStorage.setItem("highlightedDate", i);
+            highlightFromStorage();
+            confetti();
+        };
+        calendar.appendChild(dateDiv);
     }
   }
 
