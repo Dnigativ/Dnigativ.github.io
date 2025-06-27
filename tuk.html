@@ -1,68 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Supabase Calendar Test</title>
-<style>
-  body {
-    font-family: sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem;
-  }
-  #calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 60px);
-    gap: 10px;
-    margin-bottom: 1rem;
-  }
-  .date {
-    width: 60px;
-    height: 60px;
-    background-color: #eee;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    border-radius: 6px;
-    user-select: none;
-    transition: background-color 0.3s;
-  }
-  .highlighted {
-    background-color: #e74c3c;
-    color: white;
-  }
-  button {
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    border: none;
-    border-radius: 5px;
-    background-color: #555;
-    color: white;
-    cursor: pointer;
-  }
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shared Calendar Highlight</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+        .date {
+            width: 60px;
+            height: 60px;
+            background-color: #eee;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+            flex-shrink: 0;
+        }
+
+        /* Контейнер календаря: 7 колонок по 60px + відступи */
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 60px);
+            gap: 10px;
+            margin-bottom: 1rem;
+            max-width: 100%;
+            overflow-x: auto; /* щоб можна було скролити, якщо екран дуже малий */
+        }
+
+        /* Мобільний адаптив */
+        @media (max-width: 480px) {
+            .calendar {
+                grid-template-columns: repeat(7, 1fr);
+            }
+            .date {
+                width: 100%;
+                max-width: none;
+                height: 50px; /* можна зменшити висоту, щоб виглядало компактніше */
+            }
+        }
+
+        .highlighted {
+            background-color: red;
+            color: white;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #555;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
+<h2>Click a date to highlight it</h2>
+<div class="calendar" id="calendar"></div>
+<button onclick="resetHighlights()">Reset Highlights</button>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-<h2>Supabase Shared Calendar</h2>
-<div id="calendar"></div>
-<button id="resetBtn">Reset Selection</button>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
 <script>
-  // 1. Встав свій Supabase URL і ключ
-  const SUPABASE_URL = "https://your-project.supabase.co"; 
-  const SUPABASE_ANON_KEY = "your-anon-key"; 
+    const calendar = document.getElementById("calendar");
 
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  const calendar = document.getElementById("calendar");
-  const USER_ID = "sharedUser";
-
-  // Створюємо 30 дат
+    // Generate 30 days for the calendar
     for (let i = 1; i <= 30; i++) {
         const dateDiv = document.createElement("div");
         dateDiv.classList.add("date");
@@ -74,86 +83,25 @@
         };
         calendar.appendChild(dateDiv);
     }
-  }
 
-  // Підсвічуємо вибрану дату
-  function highlightDate(date) {
-    const dates = document.querySelectorAll(".date");
-    dates.forEach(d => {
-      d.classList.toggle("highlighted", d.textContent === String(date));
-    });
-  }
-
-  // Вибір дати - запис у Supabase
-  async function selectDate(date) {
-    try {
-      const { error } = await supabase
-        .from("user_selections")
-        .upsert({ user_id: USER_ID, selected_date: date }, { onConflict: "user_id" });
-
-      if (error) throw error;
-
-      highlightDate(date);
-    } catch (err) {
-      console.error("Error selecting date:", err.message);
+    function highlightFromStorage() {
+        const highlighted = localStorage.getItem("highlightedDate");
+        const dates = document.querySelectorAll(".date");
+        dates.forEach((el) => {
+            el.classList.remove("highlighted");
+            if (el.textContent === highlighted) {
+                el.classList.add("highlighted");
+            }
+        });
     }
-  }
 
-  // Скидання вибору
-  async function resetSelection() {
-    try {
-      const { error } = await supabase
-        .from("user_selections")
-        .delete()
-        .eq("user_id", USER_ID);
-
-      if (error) throw error;
-
-      highlightDate(null);
-    } catch (err) {
-      console.error("Error resetting selection:", err.message);
+    function resetHighlights() {
+        localStorage.removeItem("highlightedDate");
+        highlightFromStorage();
     }
-  }
 
-  // Завантажуємо поточний вибір
-  async function loadSelection() {
-    try {
-      const { data, error } = await supabase
-        .from("user_selections")
-        .select("selected_date")
-        .eq("user_id", USER_ID)
-        .single();
-
-      if (error && error.code !== "PGRST116") throw error; // "no rows found" – ігноруємо
-
-      if (data) highlightDate(data.selected_date);
-    } catch (err) {
-      console.error("Error loading selection:", err.message);
-    }
-  }
-
-  // Слухаємо зміни в реальному часі
-  function subscribeToChanges() {
-    supabase
-      .channel("user_selection_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "user_selections", filter: `user_id=eq.${USER_ID}` },
-        payload => {
-          console.log("Update from Supabase:", payload.new);
-          highlightDate(payload.new ? payload.new.selected_date : null);
-        }
-      )
-      .subscribe();
-  }
-
-  // Ініціалізація
-  createCalendar();
-  loadSelection();
-  subscribeToChanges();
-
-  document.getElementById("resetBtn").onclick = resetSelection;
+    // Initial load
+    highlightFromStorage();
 </script>
-
 </body>
 </html>
