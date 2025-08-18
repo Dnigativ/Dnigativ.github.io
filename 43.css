@@ -1,0 +1,194 @@
+/* Загальні стилі */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: #e6f4fa;
+}
+
+.container {
+    width: 80%;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Хедер */
+header {
+    background-color: #003366;
+    color: white;
+    padding: 10px 0;
+}
+
+header h1 {
+    text-align: center;
+    font-size: 2.5rem;
+}
+
+nav ul {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+}
+
+nav ul li {
+    margin: 0 15px;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.2rem;
+}
+
+/* Герой-секція */
+#hero {
+    background-color: #91cce3;
+    color: white;
+    text-align: center;
+    padding: 50px 0;
+}
+
+#hero h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+#hero .btn {
+    background-color: #004466;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    font-size: 1.2rem;
+    border-radius: 5px;
+}
+
+/* Секція послуг */
+#services {
+    background-color: white;
+    padding: 50px 0;
+}
+
+#services h2 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 30px;
+}
+
+.service {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.service h3 {
+    font-size: 1.5rem;
+    color: #004466;
+}
+
+.service p {
+    font-size: 1rem;
+    color: #555;
+}
+
+/* Секція команди */
+#team {
+    background-color: #E8F5E9;
+    padding: 50px 0;
+}
+
+#team h2 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 30px;
+}
+
+.team-member {
+    display: inline-block;
+    width: 30%;
+    text-align: center;
+    margin: 0 1.5%;
+}
+
+.team-member img {
+    width: 100%;
+    border-radius: 50%;
+    margin-bottom: 10px;
+}
+
+.team-member h3 {
+    font-size: 1.2rem;
+    color: #004466;
+}
+
+.team-member p {
+    font-size: 1rem;
+    color: #555;
+}
+
+/* Секція відгуків */
+#reviews {
+    background-color: white;
+    padding: 50px 0;
+}
+
+#reviews h2 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 30px;
+}
+
+.review {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+/* Секція контактів */
+#contact {
+    background-color: #91cce3;
+    color: white;
+    padding: 50px 0;
+}
+
+#contact h2 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 30px;
+}
+
+#contact p,
+#contact ul {
+    text-align: center;
+    font-size: 1rem;
+    color: white;
+}
+
+#contact ul {
+    list-style: none;
+    margin-bottom: 20px;
+}
+
+#contact ul li {
+    margin: 5px 0;
+}
+
+/* Футер */
+footer {
+    background-color: #004466;
+    color: darkblue;
+    text-align: center;
+    padding: 10px 0;
+}
+
+footer a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}

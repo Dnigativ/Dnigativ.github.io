@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Вкладка: Роботи та Спеціалісти</title>
+    <style>
+        :root{
+            --bg:#aee1f9;
+            --ink:#1f1f4a;
+            --btn:#4a3a68;
+            --btn-ink:#fff;
+            --radius:16px;
+            --space:clamp(16px, 2vw, 28px);
+            --h2:clamp(22px,2.8vw,34px);
+            --h3:clamp(18px,2.2vw,24px);
+            --text:clamp(14px,1.2vw,18px)
+        }
+
+        *{box-sizing:border-box}
+        body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:#fff}
+
+        .container{max-width:1100px;margin:0 auto;padding:var(--space)}
+
+        /* Вкладка */
+        .tab{background:linear-gradient(180deg,#fff 0%, var(--bg) 100%);border-top:1px solid rgba(0,0,0,.06)}
+        .tab__head{display:flex;align-items:flex-end;gap:14px;margin-bottom:calc(var(--space)*.6)}
+        .tab__title{font-size:var(--h2);margin:0;color:var(--ink)}
+        .tab__note{font-size:var(--text);opacity:.8}
+
+        /* Сітка: зліва роботи, справа спеціалісти */
+        .tab__grid{display:grid;grid-template-columns:1.4fr .9fr;gap:var(--space)}
+
+        /* Універсальний слайдер */
+        .slider{position:relative;background:#fff;border-radius:var(--radius);box-shadow:0 14px 36px rgba(31,31,74,.08);overflow:hidden}
+        .slider__viewport{overflow:hidden}
+        .slider__track{display:flex;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+        .slider__slide{min-width:100%;position:relative}
+        .slider__img{display:block;width:100%;height:360px;object-fit:cover}
+        .slider__caption{position:absolute;left:12px;right:12px;bottom:12px;background:rgba(0,0,0,.45);color:#fff;padding:10px 12px;border-radius:12px;font-size:clamp(12px,1.1vw,16px)}
+
+        /* Керування */
+        .slider__controls{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 6px;pointer-events:none}
+        .slider__btn{pointer-events:auto;border:0;background:var(--bg);color:var(--ink);width:40px;height:40px;border-radius:50%;display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.12);transition:transform .15s}
+        .slider__btn:active{transform:scale(.96)}
+        .slider__btn svg{width:20px;height:20px}
+
+        .slider__dots{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:8px}
+        .slider__dot{width:8px;height:8px;border-radius:999px;background:rgba(255,255,255,.6);border:0}
+        .slider__dot[aria-current="true"]{background:var(--btn);width:22px}
+
+        /* Спеціалісти */
+        .staff{display:flex;flex-direction:column;height:100%}
+        .staff .slider__img{height:280px}
+        .staff__card{padding:14px 16px}
+        .staff__name{font-size:var(--h3);margin:0 0 6px;color:var(--ink)}
+        .staff__role{margin:0 0 10px;opacity:.8}
+        .staff__desc{margin:0;line-height:1.55;font-size:var(--text)}
+
+        /* Адаптив */
+        @media (max-width: 960px){
+            .tab__grid{grid-template-columns:1fr}
+            .slider__img{height:280px}
+            .staff .slider__img{height:240px}
+        }
+
+        /* Повага до користувачів без анімацій */
+        @media (prefers-reduced-motion: reduce){
+            .slider__track{transition:none}
+        }
+
+        /* FOOTER з вашого стилю */
+        footer{background:var(--bg);padding:calc(var(--space) * 1.6) var(--space)}
+        .cols{display:grid;grid-template-columns:1fr 1fr;gap:var(--space);align-items:start;text-align:left}
+        h3{font-size:var(--h3);margin:0 0 8px}
+        h4{font-size:var(--h3);margin:16px 0 6px}
+        p,a,em,li{font-size:var(--text);line-height:1.55}
+        .btn-call{display:inline-block;background:var(--btn);color:var(--btn-ink);padding:12px 22px;border-radius:var(--radius);text-decoration:none;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+        .links{display:flex;gap:28px;flex-wrap:wrap;align-items:center;margin-top:calc(var(--space) * 1.2)}
+        .social{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);font-weight:600;position:relative}
+        .ico{width:20px;height:20px;display:inline-block}
+        @media (max-width: 760px){.cols{grid-template-columns:1fr}.btn-call{width:100%;text-align:center}.links{gap:18px}}
+
+        /* === HEADER (шапка) === */
+        .site-header{background:#fff;border-bottom:1px solid rgba(0,0,0,.08);padding:10px var(--space)}
+        .site-header .container{display:flex;align-items:center;justify-content:space-between;gap:20px}
+        .brand{display:flex;align-items:center;gap:12px}
+        .logo{width:48px;height:48px;border-radius:50%;background:var(--bg);object-fit:cover}
+        .brand-title{font-size:clamp(18px,2vw,24px);font-weight:700;color:var(--ink)}
+        .site-nav ul{list-style:none;display:flex;gap:clamp(12px,2vw,24px);margin:0;padding:0}
+        .site-nav a{text-decoration:none;color:var(--ink);font-weight:600}
+        .site-nav a:hover{text-decoration:underline}
+
+        /* === HERO (бекграунд після шапки) === */
+        .hero{min-height:70vh;background:url("hero-bg.jpg") center/cover no-repeat;position:relative;display:flex;align-items:center}
+        .hero::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg, rgba(31,31,74,.05) 0%, rgba(31,31,74,.35) 35%, rgba(31,31,74,.55) 65%)}
+        .hero .container{position:relative;width:100%;display:flex;justify-content:flex-end}
+        .hero__panel{max-width:540px;text-align:right;color:#fff;background:rgba(31,31,74,.22);padding:clamp(12px,2vw,20px);border-radius:var(--radius);backdrop-filter:saturate(120%) blur(2px)}
+        .hero__title{font-size:clamp(28px,5vw,56px);margin:0 0 8px}
+        .hero__subtitle{font-size:clamp(14px,1.6vw,20px);margin:0;opacity:.95}
+
+        @media (max-width:760px){
+            .site-header .container{flex-wrap:wrap;gap:12px}
+            .site-nav ul{flex-wrap:wrap;gap:12px}
+            .hero{min-height:56vh}
+            .hero .container{justify-content:center}
+            .hero__panel{text-align:center}
+        }
+    </style>
+</head>
+<body>
+<!-- ШАПКА з місцем під лого та назву -->
+<header class="site-header" aria-label="Шапка сайту">
+    <div class="container">
+        <div class="brand">
+            <img class="logo" src="logo.png" alt="Логотип клініки" onerror="this.removeAttribute('src')" />
+            <div class="brand-title">Стоматологічна клініка</div>
+        </div>
+        <nav class="site-nav" aria-label="Головне меню">
+            <ul>
+                <li><a href="#services">Послуги</a></li>
+                <li><a href="#team">Наша команда</a></li>
+                <li><a href="#reviews">Відгуки</a></li>
+                <li><a href="#contact">Контакти</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<!-- HERO-блок з великим бекграундом і правим текстом -->
+<section id="hero" class="hero" aria-label="Головний блок із фоном">
+    <div class="container">
+        <div class="hero__panel">
+            <h1 class="hero__title">Стоматологічна клініка</h1>
+            <p class="hero__subtitle">Місце для меншого тексту чи слогану — тут можна додати короткий опис або акцію.</p>
+        </div>
+    </div>
+</section>
+<section id="portfolio" class="tab" aria-label="Наші роботи та спеціалісти">
+    <div class="container">
+        <div class="tab__head">
+            <h2 class="tab__title">Наші роботи та команда</h2>
+            <p class="tab__note">Гортайте приклади лікування та знайомтеся зі спеціалістами.</p>
+        </div>
+
+        <div class="tab__grid">
+            <!-- ЛІВА КОЛОНКА: РОБОТИ -->
+            <article class="slider" id="works" aria-roledescription="карусель" aria-label="Приклади робіт" data-autoplay="true" data-interval="3500">
+                <div class="slider__viewport" tabindex="0" aria-live="polite">
+                    <div class="slider__track">
+                        <figure class="slider__slide">
+                            <img class="slider__img" src="works/work1.jpg" alt="Відбілювання: до і після" />
+                            <figcaption class="slider__caption">Відбілювання: результат за один візит</figcaption>
+                        </figure>
+                        <figure class="slider__slide">
+                            <img class="slider__img" src="works/work2.jpg" alt="Гігієна та полірування" />
+                            <figcaption class="slider__caption">Професійна гігієна та полірування</figcaption>
+                        </figure>
+                        <figure class="slider__slide">
+                            <img class="slider__img" src="works/work3.jpg" alt="Ортодонтія – капи" />
+                            <figcaption class="slider__caption">Ортодонтичне лікування капами</figcaption>
+                        </figure>
+                    </div>
+                </div>
+                <div class="slider__controls" aria-hidden="true">
+                    <button class="slider__btn" data-prev aria-label="Попереднє">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <button class="slider__btn" data-next aria-label="Наступне">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
+                <div class="slider__dots" role="tablist" aria-label="Переходи між слайдами"></div>
+            </article>
+
+            <!-- ПРАВА КОЛОНКА: СПЕЦІАЛІСТИ -->
+            <article class="slider staff" id="staff" aria-roledescription="карусель" aria-label="Наші спеціалісти" data-autoplay="true" data-interval="4200">
+                <div class="slider__viewport" tabindex="0" aria-live="polite">
+                    <div class="slider__track">
+                        <section class="slider__slide">
+                            <img class="slider__img" src="team/katya.jpg" alt="Катя – головний лікар" />
+                            <div class="staff__card">
+                                <h3 class="staff__name">Катя</h3>
+                                <p class="staff__role">Головний лікар</p>
+                                <p class="staff__desc">Понад 10 років досвіду терапевтичного лікування, естетичної реставрації та керування планами лікування.</p>
+                            </div>
+                        </section>
+                        <section class="slider__slide">
+                            <img class="slider__img" src="team/danya.jpg" alt="Даня – гігієніст та ортодонт" />
+                            <div class="staff__card">
+                                <h3 class="staff__name">Даня</h3>
+                                <p class="staff__role">Гігієніст, ортодонт</p>
+                                <p class="staff__desc">Проводить професійну гігієну, полірування та ортодонтичне лікування капами. Консультує щодо профілактики.</p>
+                            </div>
+                        </section>
+                        <section class="slider__slide">
+                            <img class="slider__img" src="team/larisa.jpg" alt="Лариса – дитячий стоматолог" />
+                            <div class="staff__card">
+                                <h3 class="staff__name">Лариса</h3>
+                                <p class="staff__role">Дитячий стоматолог</p>
+                                <p class="staff__desc">Спеціалізується на лікуванні та адаптації дітей у кріслі. М'який підхід без стресу для маленьких пацієнтів.</p>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+                <div class="slider__controls" aria-hidden="true">
+                    <button class="slider__btn" data-prev aria-label="Попереднє">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <button class="slider__btn" data-next aria-label="Наступне">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
+                <div class="slider__dots" role="tablist" aria-label="Переходи між спеціалістами"></div>
+            </article>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <div class="cols">
+            <section>
+                <h3>Товариство з обмеженою відповідальністю «Стоматологічна клініка “Доладна”»</h3>
+                <h4>Адреса</h4>
+                <p>
+                    Ел. адреса: <a href="mailto:info@mysite.ua">info@mysite.ua</a><br>
+                    Тел.: <a href="tel:+380441234567">044 123 45 67</a><br>
+                    вул. Грушевського Михайла, 62<br>
+                    Житомирська область, м. Житомир, Україна
+                </p>
+            </section>
+            <section>
+                <h4>Режим роботи</h4>
+                <p>
+                    Пн, Ср, Чт: 9:00–17:00<br>
+                    Вт: 11:00–19:00<br>
+                    Пт: 9:00–13:00<br>
+                    <em>Лише за попереднім записом, запис за дзвінком.</em>
+                </p>
+                <a class="btn-call" href="tel:+380441234567">Подзвонити</a>
+            </section>
+        </div>
+        <nav class="links" aria-label="Посилання">
+            <a class="social" href="#">
+                <svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8 2 5 5 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-4-3-7-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5Z"/></svg>
+                Розташування на карті
+            </a>
+            <a class="social" href="#">
+                <svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.6 9.9V15.5H7.7V12h2.7V9.7c0-2.7 1.6-4.2 4-4.2 1.2 0 2.4.2 2.4.2v2.6h-1.3c-1.3 0-1.7.8-1.7 1.6V12h2.9l-.5 3.5h-2.4v6.4A10 10 0 0 0 22 12Z"/></svg>
+                Facebook
+            </a>
+            <a class="social" href="#">
+                <svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2 0 2 .2 2.7.4.7.3 1.3.6 1.9 1.2.6.6.9 1.2 1.2 1.9.2.7.3 1.5.4 2.7.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.2 2-.4 2.7-.3.7-.6 1.3-1.2 1.9-.6.6-1.2.9-1.9 1.2-.7.2-1.5.3-2.7.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-2-.2-2.7-.4a5 5 0 0 1-3.1-3.1c-.2-.7-.3-1.5-.4-2.7C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.2-2 .4-2.7A5 5 0 0 1 5.8 1.3c.7-.2 1.5-.3 2.7-.4C9.8 1 10.2 1 13.4 1c3.2 0 3.6 0 4.9.1ZM12 6.9A5.1 5.1 0 1 0 12 17a5.1 5.1 0 0 0 0-10.2Zm6.5-1.1a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4ZM12 8.9A3.1 3.1 0 1 1 8.9 12 3.1 3.1 0 0 1 12 8.9Z"/></svg>
+                Instagram
+            </a>
+        </nav>
+    </div>
+</footer>
+
+<script>
+    /**
+     * ЛЕГКИЙ СЛАЙДЕР без зовнішніх бібліотек
+     * Підтримує: autoplay, стрілки, крапки, свайп, клавіші, pause on hover/blur
+     */
+    class LiteSlider {
+        constructor(root){
+            this.root = root
+            this.viewport = root.querySelector('.slider__viewport')
+            this.track = root.querySelector('.slider__track')
+            this.slides = Array.from(root.querySelectorAll('.slider__slide'))
+            this.prevBtn = root.querySelector('[data-prev]')
+            this.nextBtn = root.querySelector('[data-next]')
+            this.dots = root.querySelector('.slider__dots')
+            this.index = 0
+            this.timer = null
+            this.opts = {
+                autoplay: root.dataset.autoplay === 'true',
+                interval: Number(root.dataset.interval || 4000)
+            }
+            this.bind()
+            this.buildDots()
+            this.go(0, false)
+            this.autoplay()
+        }
+
+        bind(){
+            this.prevBtn?.addEventListener('click', ()=>this.prev())
+            this.nextBtn?.addEventListener('click', ()=>this.next())
+
+            // клавіатура
+            this.viewport.addEventListener('keydown', (e)=>{
+                if(e.key === 'ArrowLeft') this.prev()
+                if(e.key === 'ArrowRight') this.next()
+            })
+
+            // свайп
+            let startX = 0, dx = 0
+            const onTouchStart = (e)=>{ startX = (e.touches?e.touches[0].clientX:e.clientX); dx=0 }
+            const onMove = (e)=>{ if(startX){ dx = (e.touches?e.touches[0].clientX:e.clientX) - startX }}
+            const onEnd = ()=>{ if(Math.abs(dx) > 40){ dx<0 ? this.next() : this.prev() } startX=0; dx=0 }
+            this.viewport.addEventListener('touchstart', onTouchStart, {passive:true})
+            this.viewport.addEventListener('touchmove', onMove, {passive:true})
+            this.viewport.addEventListener('touchend', onEnd)
+            this.viewport.addEventListener('mousedown', onTouchStart)
+            window.addEventListener('mousemove', onMove)
+            window.addEventListener('mouseup', onEnd)
+
+            // пауза при наведенні/зникненні вкладки
+            this.root.addEventListener('mouseenter', ()=>this.stop())
+            this.root.addEventListener('mouseleave', ()=>this.autoplay())
+            document.addEventListener('visibilitychange', ()=>{
+                if(document.hidden) this.stop(); else this.autoplay()
+            })
+
+            // пауза коли не в зоні видимості
+            const io = new IntersectionObserver((entries)=>{
+                entries.forEach(e=> e.isIntersecting ? this.autoplay() : this.stop())
+            },{threshold:.2})
+            io.observe(this.root)
+            this.io = io
+
+            // ресайз
+            window.addEventListener('resize', ()=>this.go(this.index,false))
+        }
+
+        buildDots(){
+            if(!this.dots) return
+            this.dots.innerHTML = ''
+            this.slides.forEach((_,i)=>{
+                const b = document.createElement('button')
+                b.className = 'slider__dot'
+                b.role = 'tab'
+                b.ariaLabel = `Перейти до слайду ${i+1}`
+                b.addEventListener('click', ()=>this.go(i))
+                this.dots.appendChild(b)
+            })
+        }
+
+        go(i, announce=true){
+            const max = this.slides.length
+            this.index = (i+max)%max
+            const x = -this.index * this.viewport.clientWidth
+            this.track.style.transform = `translate3d(${x}px,0,0)`
+            // оновити крапки
+            if(this.dots){
+                Array.from(this.dots.children).forEach((d,di)=>{
+                    d.setAttribute('aria-current', di===this.index ? 'true' : 'false')
+                })
+            }
+            // опис для екранних читалок
+            if(announce){
+                const current = this.slides[this.index]
+                const alt = current.querySelector('img')?.alt || ''
+                this.viewport.setAttribute('aria-label', `${alt}`)
+            }
+        }
+
+        next(){ this.go(this.index+1) }
+        prev(){ this.go(this.index-1) }
+
+        autoplay(){
+            if(!this.opts.autoplay) return
+            this.stop()
+            this.timer = setInterval(()=>this.next(), this.opts.interval)
+        }
+        stop(){ if(this.timer){ clearInterval(this.timer); this.timer=null } }
+    }
+
+    // Ініціалізація для обох слайдерів
+    document.querySelectorAll('.slider').forEach(el=> new LiteSlider(el))
+</script>
+</body>
+</html>
